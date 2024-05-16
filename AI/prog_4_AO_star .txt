@@ -1,0 +1,73 @@
+def cost(H, condition, weight=1):
+    cost_dict = {}
+    
+    if 'AND' in condition:
+        AND_nodes = condition['AND']
+        path_a = ' AND '.join(AND_nodes)
+        path_a_cost = sum(H[node]+weight for node in AND_nodes)
+        
+        cost_dict[path_a] = path_a_cost
+        
+    if 'OR' in condition:
+        OR_nodes = condition['OR']
+        path_b = ' OR '.join(OR_nodes)
+        path_b_cost = min(H[node]+weight for node in OR_nodes)
+
+        cost_dict[path_b] = path_b_cost
+
+    return cost_dict
+
+def update_cost(H, conditions, weight=1):
+    least_cost = {}
+    
+    for key in reversed(list(conditions.keys())):
+        condition = conditions[key]
+        print(key,':', conditions[key],'>>>', cost(H, condition, weight))
+        c = cost(H, condition, weight)
+        H[key] = min(c.values())
+        
+        least_cost[key] = c
+        
+    return least_cost
+
+def shortest_path(start, updated_cost, H):
+    
+    path = start
+    if start in updated_cost:
+        min_cost = min(updated_cost[start].values())
+        key = list(updated_cost[start].keys())
+        index = list(updated_cost[start].values()).index(min_cost)
+        
+        next_nodes = key[index].split()
+        
+        if len(next_nodes) == 1:
+            start = next_nodes[0] 
+            path += '<--'+shortest_path(start, updated_cost, H)
+        else:
+            path += '<--('+ key[index] +') '
+            start = next_nodes[0]
+            
+            path += '[' +shortest_path(start, updated_cost, H) + ' + '
+ 
+            start = next_nodes[-1]
+
+            path += shortest_path(start, updated_cost, H) +']'
+    return path
+
+H = {'A': -1, 'B':5, 'C':2, 'D':4, 'E':7, 'F':9, 'G':3, 'H':0, 'I':0, 'J':0}
+
+conditions = {
+    'A': {'OR': ['B'], 'AND':['C', 'D']},
+    'B': {'OR': ['E','F']},
+    'C': {'OR': ['G'], 'AND':['H', 'I']},
+    'D': {'OR': ['J']},
+}
+
+weight=1
+
+print('Update Cost: ')
+updated_cost = update_cost(H, conditions, weight=1)
+
+print('*'*75)
+print('Shorted Path : \n', shortest_path('A', updated_cost, H))
+    
